@@ -30,7 +30,7 @@ body{
 	width:100%;
 	box-sizing: border-box;
 	height:32px;
-	margin: 0 10% 20px 0;
+	margin: 0 10% 16px 0;
 	padding: 5px 10px 1px 15px;
 	background: white;
 	color: black;
@@ -45,10 +45,22 @@ body{
 .input-from-field{
 
 }
+.input-style-checkbox{
+	width:20px;
+	height:20px;
+	background: white;
+	vertical-align: center;
+}
+.input-style-label{
+	position: relative;
+	top:-5px;
+	font-family: gibsonRegular;
+}
 .input-content-field{
-	height:calc(100% - 280px);
+	height:calc(100% - 270px);
 	overflow-x: hidden;
 	overflow-y: auto;
+	margin-bottom:10px;
 }
 .input-copy-button{
 	border-radius:10px;
@@ -57,10 +69,10 @@ body{
 	width:60%;
 	margin-left:auto;
 	margin-right:auto;
-	height:40px;
+	height:36px;
 	font-family: gibsonRegular;
 	font-size: 16px;
-	line-height: 40px;
+	line-height: 36px;
 	cursor: pointer;
 }
 .html-container{

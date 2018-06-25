@@ -81,7 +81,19 @@ export default class CodeGenerator{
         this.contentField.innerHTML = this.defaultContent.content;
         this.contentField.addEventListener('input', ()=>{
             this.onContentInput();
+        });
+
+        this.styleCheck = create('input', this.inputContainer, 'input-style-checkbox');
+        this.styleCheck.setAttribute('type', 'checkbox');
+        this.styleCheck.setAttribute('checked', '');
+        this.styleCheck.id = 'StyleCheckBox';
+        this.styleCheck.addEventListener('click', ()=>{
+            this.updateCode();
         })
+
+        this.styleCheckLabel = create('label', this.inputContainer, 'input-style-label');
+        this.styleCheckLabel.innerText = 'Inkluder styles';
+        this.styleCheckLabel.setAttribute('for', 'StyleCheckBox');
 
         this.copyBotton = create('button', this.inputContainer, ['input-copy-button']);
         this.copyBotton.innerText = 'Kopier kode';
@@ -118,17 +130,18 @@ export default class CodeGenerator{
     saveSettings(){
         localStorage.setItem('lsTest', this.settings.getValuesAsJSON(true));
     }
-    html(el){
-        if(el === undefined) el = this.content;
+    html(styles = true){
+        let el = this.content;
         let toHTML = (el.to === '') ? '' : `<div class="drn-format-email-header drn-format-email-to"><span>Til: </span>${el.to}</div>`;
         let fromHTML = (el.from === '') ? '' : `<div class="drn-format-email-header drn-format-email-from"><span>Fra: </span>${el.from}</div>`;
         let subjectHTML = (el.subject === '') ? '' : `<div class="drn-format-email-header drn-format-email-subject"><span>Emne: </span>${el.subject}</div>`;
+        let styleHTML = (styles) ? `<style>${CSS.styles()}</style>` : '';
         let h = `<div class="drn-format-email-wrapper">
             <div class="drn-format-mail-logo">${mailSVG()}</div>${toHTML}${fromHTML}${subjectHTML}
             <div class="drn-format-email-header drn-format-email-date">${el.date}</div>
             <div class="drn-format-email-content">${el.content.replace(/\r\n/g, '<br/>').replace(/\n/g, '<br/>').replace(/😊|😂/g, ':-)')}</div>
         </div>
-        <style>${CSS.styles()}</style>`;
+        ${styleHTML}`;
     
         return h;
 
@@ -175,7 +188,7 @@ export default class CodeGenerator{
         </html>`;
     }
     updateCode(){
-        this.codeContainer.innerText = this.html();
+        this.codeContainer.innerText = this.html(this.styleCheck.checked);
     }
     updateHTML(){
         this.htmlFrame.srcdoc = this.framehtml();
