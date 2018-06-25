@@ -1,7 +1,6 @@
 'use strict'
-import QuickSettings from 'quicksettings';
-import Manual from './manual';
 
+import CSS from './styles';
 import {select, create, selectText, throttleEvents} from '../../utils/trix-utils';
 
 export default class CodeGenerator{
@@ -12,34 +11,21 @@ export default class CodeGenerator{
         this.updateCode();
     }
     build(){
-/*         this.cf = {
-            Farve:'#cc380d',
-            // Spørgsmål:'Hvad er meningen med livet, universet og det hele?',
-            Min:'-100',
-            Max:'100',
-            Svar:'42',
-            Start:'0',
-            Step:'1',
-            Decimaler:'0',
-            Enhed:'',
-            Feedback:'Det kan godt være svært at sætte et tal på, men vi ved heldigvis fra ”The Hitchhikers Guide to the Galaxy“ at svaret er 42.',
-            Kilde:'Douglas Adams',
-            Script:'https://www.dr.dk/tjenester/visuel/simple-survey-slider/default/drn-main.bundle.js'
-        };
- */        
+        
         this.defaultContent = {
-            Farve:'#cc380d',
-            Spørgsmål:'Her er spørgsmålet',
-            Min:'0',
-            Max:'100',
-            Svar:'75',
-            Start:'50',
-            Step:'1',
-            Decimaler:'0',
-            Enhed:'%',
-            Feedback:'Her er den uddybende forklaring',
-            Kilde:'Navn',
-            Script:'https://www.dr.dk/tjenester/visuel/simple-survey-slider/default/drn-main.bundle.js'
+            from:'Afsender',
+            to:'Modtager',
+            subject:'Her står emnet',
+            date:'Tordag 21. Juni 2018, 16.45',
+            content:'Her er mailens indhold. <br/><br/>Med venlig hilsen<br/>Afsender',
+        };
+
+        this.content = {
+            from:'',
+            to:'',
+            subject:'',
+            date:this.defaultContent.date,
+            content:this.defaultContent.content
         };
 
         this.htmlContainer = create('div', select('body'), 'html-container');
@@ -47,6 +33,9 @@ export default class CodeGenerator{
         // this.htmlFrame.setAttribute('scrolling', 'no');
         this.codeContainer = create('div', select('body'), 'code-container');
         this.codeContainer.setAttribute('contenteditable', '');
+
+        this.inputContainer = create('div', select('body'), 'input-container');
+        
         this.emptyContainer = create('div', select('body'), 'empty-container');
         this.emptyContainer.innerText = 'Hello';
         
@@ -59,74 +48,69 @@ export default class CodeGenerator{
     }
     setupSettings(){
         //console.log('ls:', localStorage.getItem('lsTest'));
-        let standardColors = {
-            Nyheder:'#cc380d',
-            Sporten:'#ffd200',
-            Politik:'#147a89',
-            Kontant:'#0861ce'
+        let ls = localStorage.getItem('ls-format-thing');
+        if(ls){
+            //this.settings.setValuesFromJSON(ls);
         }
-        QuickSettings.useExtStyleSheet();
-        let manual = new Manual();
-        this.settings = QuickSettings.create(10, 10, 'Indstillinger', select('body'));
-        // let s = this.settings;
-        //this.settings = this.settings;
-        this.settings.addButton('?', ()=>{
-            manual.toggleVisibility();
+        this.toField = create('input', this.inputContainer, ['input','input-to-field']);
+        this.toField.setAttribute('type','text');
+        this.toField.placeholder = this.defaultContent.to;
+        this.toField.dataField = 'to';
+        this.toField.addEventListener('input', this.onInput.bind(this));
+
+        this.fromField = create('input', this.inputContainer, ['input','input-from-field']);
+        this.fromField.setAttribute('type','text');
+        this.fromField.placeholder = this.defaultContent.from;
+        this.fromField.dataField = 'from';
+        this.fromField.addEventListener('input', this.onInput.bind(this));
+
+        this.subjectField = create('input', this.inputContainer, ['input','input-subject-field']);
+        this.subjectField.setAttribute('type','text');
+        this.subjectField.placeholder = this.defaultContent.subject;
+        this.subjectField.dataField = 'subject';
+        this.subjectField.addEventListener('input', this.onInput.bind(this));
+        
+        this.dateField = create('input', this.inputContainer, ['input','input-date-field']);
+        this.dateField.setAttribute('type','text');
+        this.dateField.placeholder = 'Dato og tid. f.eks: ' + this.defaultContent.date;
+        this.dateField.dataField = 'date';
+        this.dateField.addEventListener('input', this.onInput.bind(this));
+
+        this.contentField = create('div', this.inputContainer, ['input','input-content-field']);
+        this.contentField.setAttribute('contenteditable', '');
+        this.contentField.innerHTML = this.defaultContent.content;
+        this.contentField.addEventListener('input', ()=>{
+            this.onContentInput();
         })
-        this.settings.addButton('Opdater', ()=>{
-            this.updateHTML();
-            this.updateCode();
-            this.saveSettings();
-        });
-        this.settings.addButton('Kopier kode', ()=>{
+
+        this.copyBotton = create('button', this.inputContainer, ['input-copy-button']);
+        this.copyBotton.innerText = 'Kopier kode';
+        this.copyBotton.addEventListener('click', ()=>{
             this.codeContainer.classList.add('select-styled');
             selectText('.code-container');
             document.execCommand('copy');
             this.codeContainer.classList.remove('select-styled');
             selectText('.empty-container');
-        });
-        this.settings.addButton('Nulstil', ()=>{
-           let c = confirm('Er du sikker på, at du vil nulstille? Alle felter udfyldes med dummy tekst og værdier og det kan ikke efterfølgende fortrydes.');
-           if(c){
-                this.resetContent();
-           }
-        });
-        //s.addTextArea('Spørgsmål');
-        this.settings.addText('Farve', '#cc380d');
-        this.settings.addDropDown('StandardFarver', ['Nyheder', 'Sporten', 'Politik', 'Kontant'], (item)=>{
-            // console.log(item);
-            this.settings.setValue('Farve', standardColors[item.value]);
-            this.updateHTML();
-            this.updateCode();
-        });
-        this.settings.addTextArea('Spørgsmål', 'Hvad er meningen med livet, universet og det hele?', (value)=>{
-            //this.cf.Spørgsmål = value;
-        });
-        this.settings.addTextArea('Feedback', 'Det kan godt være svært at sætte et tal på, men vi ved heldigvis fra ”The Hitchhikers Guide to the Galaxy“ at svaret er 42.');
-        this.settings.addText('Kilde', 'Douglas Adams');
-        this.settings.addText('Min', '-100');
-        this.settings.addText('Max', '100');
-        this.settings.addText('Svar', '42');
-        this.settings.addText('Start', '0');
-        this.settings.addText('Step', '1');
-        this.settings.addText('Decimaler', '0');
-        this.settings.addText('Enhed', '');
-        this.settings.addText('Script', 'https://www.dr.dk/tjenester/visuel/simple-survey-slider/default/drn-main.bundle.js');
+        })
         
-        this.settings.setTextAreaRows('Spørgsmål', 3);
-        this.settings.setTextAreaRows('Feedback', 5);
-        
-        //this.settings.saveInLocalStorage('simpleSliderSettings');
-        let ls = localStorage.getItem('lsTest');
-        if(ls){
-            this.settings.setValuesFromJSON(ls);
-        }
         //console.log('ls:', localStorage.getItem('lsTest'));
         
     }
+    onInput(ev){
+        console.log('input', ev.currentTarget.value, this);
+        this.content[ev.currentTarget.dataField] = ev.currentTarget.value;
+        this.updateHTML();
+        this.updateCode();
+
+    }
+    onContentInput(){
+        this.content['content'] = this.contentField.innerText;
+        this.updateHTML();
+        this.updateCode();
+    }
     resetContent(){
         console.log('reset');
-        this.settings.setValuesFromJSON(this.defaultContent);
+        // this.settings.setValuesFromJSON(this.defaultContent);
         this.updateCode();
         this.updateHTML();
         this.saveSettings();
@@ -134,12 +118,30 @@ export default class CodeGenerator{
     saveSettings(){
         localStorage.setItem('lsTest', this.settings.getValuesAsJSON(true));
     }
-    html(){
-        let h = `<div data-survey-slider data-min="${this.settings.getValue('Min')}" data-max="${this.settings.getValue('Max')}" data-color="${this.settings.getValue('Farve')}" data-answer="${this.settings.getValue('Svar')}" data-unit="${this.settings.getValue('Enhed')}" data-step="${this.settings.getValue('Step')}" data-start="${this.settings.getValue('Start')}" data-resultprecision="${this.settings.getValue('Decimaler')}" data-question="${this.settings.getValue('Spørgsmål')}" data-source="${this.settings.getValue('Kilde')}" data-feedback="${this.settings.getValue('Feedback')}"></div>
-        <script src="${this.settings.getValue('Script')}"></script>
-        `;
+    html(el){
+        if(el === undefined) el = this.content;
+        let toHTML = (el.to === '') ? '' : `<div class="drn-format-email-header drn-format-email-to"><span>Til: </span>${el.to}</div>`;
+        let fromHTML = (el.from === '') ? '' : `<div class="drn-format-email-header drn-format-email-from"><span>Fra: </span>${el.from}</div>`;
+        let subjectHTML = (el.subject === '') ? '' : `<div class="drn-format-email-header drn-format-email-subject"><span>Emne: </span>${el.subject}</div>`;
+        let h = `<div class="drn-format-email-wrapper">
+            <div class="drn-format-mail-logo">${mailSVG()}</div>${toHTML}${fromHTML}${subjectHTML}
+            <div class="drn-format-email-header drn-format-email-date">${el.date}</div>
+            <div class="drn-format-email-content">${el.content.replace(/\r\n/g, '<br/>').replace(/\n/g, '<br/>').replace(/😊|😂/g, ':-)')}</div>
+        </div>
+        <style>${CSS.styles()}</style>`;
+    
         return h;
+
+        function mailSVG(){
+            return `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/" x="0px" y="0px" width="30px" height="20px" viewBox="0 0 30 20" style="enable-background:new 0 0 30 20;" xml:space="preserve">
+            <polygon fill="#b8b8b8" points="0,0 30,0 15,9.8 "/>
+            <polygon fill="#b8b8b8" points="0,1.5 0,20 30,20 30,1.5 15,11.2 "/>
+            </svg>
+            `
+        }
+        
     }
+    
     framehtml(){
         return `<!DOCTYPE html>
         <html lang="en">
@@ -202,7 +204,7 @@ export default class CodeGenerator{
         let source = grabValue('data-source');
         let script = grabValue('script src');
 
-        this.settings.setValue('Farve', color);
+     /*    this.settings.setValue('Farve', color);
         this.settings.setValue('Spørgsmål', question);
         this.settings.setValue('Min', min);
         this.settings.setValue('Max', max);
@@ -214,21 +216,8 @@ export default class CodeGenerator{
         this.settings.setValue('Feedback', feedback);
         this.settings.setValue('Kilde', source);
         this.settings.setValue('Script', script);
-
-/* 
-        console.log('Farve', color);
-        console.log('Spørgsmål', question);
-        console.log('Min', min);
-        console.log('Max', max);
-        console.log('Svar', answer);
-        console.log('Start', start);
-        console.log('Step', step);
-        console.log('Decimaler', precision);
-        console.log('Enhed', unit);
-        console.log('Feedback', feedback);
-        console.log('Kilde', source);
-        console.log('Script', script);
- */        
+ */
+        
         this.updateHTML();
     }
 
