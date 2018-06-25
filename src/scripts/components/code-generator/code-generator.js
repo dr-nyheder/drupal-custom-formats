@@ -135,10 +135,10 @@ export default class CodeGenerator{
         let toHTML = (el.to === '') ? '' : `<div class="drn-format-email-header drn-format-email-to"><span>Til: </span>${el.to}</div>`;
         let fromHTML = (el.from === '') ? '' : `<div class="drn-format-email-header drn-format-email-from"><span>Fra: </span>${el.from}</div>`;
         let subjectHTML = (el.subject === '') ? '' : `<div class="drn-format-email-header drn-format-email-subject"><span>Emne: </span>${el.subject}</div>`;
+        let dateHTML = (el.date === '') ? '' : `<div class="drn-format-email-header drn-format-email-date">${el.date}</div>`;
         let styleHTML = (styles) ? `<style>${CSS.styles()}</style>` : '';
         let h = `<div class="drn-format-email-wrapper">
-            <div class="drn-format-mail-logo">${mailSVG()}</div>${toHTML}${fromHTML}${subjectHTML}
-            <div class="drn-format-email-header drn-format-email-date">${el.date}</div>
+            <div class="drn-format-mail-logo">${mailSVG()}</div>${toHTML}${fromHTML}${subjectHTML}${dateHTML}
             <div class="drn-format-email-content">${el.content.replace(/\r\n/g, '<br/>').replace(/\n/g, '<br/>').replace(/😊|😂/g, ':-)')}</div>
         </div>
         ${styleHTML}`;
