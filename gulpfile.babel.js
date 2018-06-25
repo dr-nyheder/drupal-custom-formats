@@ -10,6 +10,7 @@ import webpack from 'webpack';
 import webpackConfig from './webpack.config.babel';
 import webpackDevConfig from './webpack.dev.config.babel';
 import WebpackDevServer from 'webpack-dev-server';
+import config from './config';
 
 
 const pathArray = __dirname.split('/');
@@ -21,26 +22,20 @@ gulp.task('default', ['watch'], () => {
 
 gulp.task('stage', ['stage:clean','assets:dev', 'index:dev'], () => {
 
-//   const pathArray = __dirname.split('/');
-//   const folder = pathArray[pathArray.length -1];
-
   return gulp.src('dev/**/*')
-  .pipe(gulp.dest('/Volumes/staging/' + folder + ''));
+  .pipe(gulp.dest(config.stagingFolder + folder + ''));
 
 })
 gulp.task('deploy', ['dist:clean','assets:dist', 'index:dist'], () => {
 
-//   const pathArray = __dirname.split('/');
-//   const folder = pathArray[pathArray.length -1];
-  const path = '/Volumes/2018/';
-  const msg = 'Vil du deploye "' + folder + '" til produktion i mappen ' + path + '?'
+  const msg = 'Vil du deploye "' + folder + '" til produktion i mappen ' + config.deployFolder + '?'
 
-  return gulp.src('dist/**/*')
+  return gulp.src(['dist/**/*', 'src/webdok.html'])
   .pipe(prompt.confirm({
         message: msg,
         default: true
   }))
-  .pipe(gulp.dest(path + folder + ''));
+  .pipe(gulp.dest(config.deployFolder + folder + ''));
 
 })
 
@@ -51,7 +46,7 @@ gulp.task('assets:dev', () => {
   .pipe(gulp.dest('dev/assets'))
 })
 gulp.task('stage:clean', () =>{
-    gulp.src('/Volumes/staging/' + folder, {read:false})
+    gulp.src(config.stagingFolder + folder, {read:false})
     .pipe(clean({force: true}));
 })
    
@@ -64,7 +59,9 @@ gulp.task('index:dev', ['webpack:dev'], function () {
 
 gulp.task('webpack:dev', ['babel:dev'], (callback) =>{
     const myConfig = Object.create(webpackDevConfig);
-
+    myConfig.plugins = [
+        new webpack.DefinePlugin(config.staging)
+    ];
     webpack(myConfig, (err, stats)=>{
         if(err) throw new gutil.PluginError('webpack', err);
         gutil.log('[webpack]', stats.toString({
@@ -93,7 +90,7 @@ gulp.task('assets:dist', () => {
 
 })
 gulp.task('dist:clean', () =>{
-    gulp.src('/Volumes/2018/' + folder, {read:false})
+    gulp.src(config.deployFolder + folder, {read:false})
     .pipe(clean({force: true}));
 })
 
@@ -108,6 +105,7 @@ gulp.task('webpack:dist', ['babel:dist'], (callback) =>{
     const myConfig = Object.create(webpackConfig);
     myConfig.plugins = [
         // new webpack.optimize.DedupePlugin(),
+        new webpack.DefinePlugin(config.deploy),
         new webpack.optimize.UglifyJsPlugin()
     ];
 
@@ -136,6 +134,9 @@ gulp.task('babel:dist', () => {
 gulp.task('webpack-dev-server', ['index:dev'], function(callback) {
 
     const myConfig = Object.create(webpackDevConfig);
+    myConfig.plugins = [
+        new webpack.DefinePlugin(config.local)
+    ];
 
     // Start a webpack-dev-server
     new WebpackDevServer(webpack(myConfig), {
