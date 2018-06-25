@@ -28,14 +28,14 @@ gulp.task('stage', ['stage:clean','assets:dev', 'index:dev'], () => {
 })
 gulp.task('deploy', ['dist:clean','assets:dist', 'index:dist'], () => {
 
-  const msg = 'Vil du deploye "' + folder + '" til produktion i mappen ' + config.deployFolder + '?'
+  const msg = 'Vil du deploye "' + config.deployName + '" til produktion i mappen ' + config.deployFolder + '?'
 
   return gulp.src(['dist/**/*', 'src/webdok.html'])
   .pipe(prompt.confirm({
         message: msg,
         default: true
   }))
-  .pipe(gulp.dest(config.deployFolder + folder + ''));
+  .pipe(gulp.dest(config.deployFolder + config.deployName + ''));
 
 })
 
@@ -90,7 +90,7 @@ gulp.task('assets:dist', () => {
 
 })
 gulp.task('dist:clean', () =>{
-    gulp.src(config.deployFolder + folder, {read:false})
+    gulp.src(config.deployFolder + config.deployName, {read:false})
     .pipe(clean({force: true}));
 })
 

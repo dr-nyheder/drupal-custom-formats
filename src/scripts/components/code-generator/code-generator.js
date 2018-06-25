@@ -30,21 +30,15 @@ export default class CodeGenerator{
 
         this.htmlContainer = create('div', select('body'), 'html-container');
         this.htmlFrame = create('iframe', this.htmlContainer, 'html-frame');
-        // this.htmlFrame.setAttribute('scrolling', 'no');
         this.codeContainer = create('div', select('body'), 'code-container');
         this.codeContainer.setAttribute('contenteditable', '');
-
         this.inputContainer = create('div', select('body'), 'input-container');
-        
         this.emptyContainer = create('div', select('body'), 'empty-container');
         this.emptyContainer.innerText = 'Hello';
-        
         this.codeContainer.addEventListener('input', throttleEvents(()=>{
             console.log('input');
             this.analyzeCode();
-            // selectText('.code-container');
         }, 500));
-
     }
     setupSettings(){
         //console.log('ls:', localStorage.getItem('lsTest'));
@@ -152,9 +146,7 @@ export default class CodeGenerator{
             </svg>
             `
         }
-        
     }
-    
     framehtml(){
         return `<!DOCTYPE html>
         <html lang="en">

@@ -1,6 +1,7 @@
 let config = {
     stagingFolder:'/Volumes/staging/',
-    deployFolder:'/Volumes/2018/',
+    deployFolder:'/Volumes/visuel/',
+    deployName:'style-snippet-tool',
     local: {
         DEBUGGING:true,
         ASSETS_PATH:JSON.stringify('assets/'),
